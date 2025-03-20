@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 # Connect to video stream
-url = "http://127.0.0.1:5000/video_feed"
+url = "http://10.106.33.26:5000/video_feed" #read over wifi because the server is running on a different machine
 response = requests.get(url, stream=True)
 
 buffer = b""
