@@ -6,6 +6,7 @@ import mediapipe as mp
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
+import json
 
 def generate_frames_local():
   # For webcam input:
@@ -25,6 +26,7 @@ def generate_frames_local():
       # pass by reference.
       image.flags.writeable = False
       image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    
       results = hands.process(image)
 
       # Draw the hand annotations on the image.
@@ -38,6 +40,8 @@ def generate_frames_local():
               mp_hands.HAND_CONNECTIONS,
               mp_drawing_styles.get_default_hand_landmarks_style(),
               mp_drawing_styles.get_default_hand_connections_style())
+          
+        print(hand_landmarks.landmark[9]) #middle finger MCP
       # Flip the image horizontally for a selfie-view display.
       cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
       if cv2.waitKey(5) & 0xFF == 27:
@@ -49,6 +53,8 @@ def generate_frames_local():
 
 
 def generate_frames():
+  global latest_landmark_9  # Store data for API
+  
   mp_drawing = mp.solutions.drawing_utils
   mp_drawing_styles = mp.solutions.drawing_styles
   mp_hands = mp.solutions.hands
@@ -67,6 +73,9 @@ def generate_frames():
           # Convert the image to RGB for processing
           image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
           results = hands.process(image_rgb)
+          
+          # Default coordinates (if no hand detected)
+          latest_landmark_9 = {"x": None, "y": None, "z": None}
 
           # Draw hand landmarks
           if results.multi_hand_landmarks:
@@ -76,6 +85,10 @@ def generate_frames():
                       mp_hands.HAND_CONNECTIONS,
                       mp_drawing_styles.get_default_hand_landmarks_style(),
                       mp_drawing_styles.get_default_hand_connections_style())
+                  
+              # Get XYZ of Landmark 9 (Middle Finger MCP)
+              landmark_9 = hand_landmarks.landmark[9]
+              latest_landmark_9 = {"x": landmark_9.x, "y": landmark_9.y, "z": landmark_9.z}
 
           # Flip the image for a selfie-view display
           image = cv2.flip(image, 1)
@@ -83,9 +96,14 @@ def generate_frames():
           # Encode frame for streaming
           _, buffer = cv2.imencode('.jpg', image)
           frame_bytes = buffer.tobytes()
+          
+          json_data = json.dumps(latest_landmark_9).encode("utf-8") 
 
-          yield (b'--frame\r\n'
-                  b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+          yield (b"--frame\r\n"
+                   b"Content-Type: image/jpeg\r\n\r\n" + frame_bytes + b"\r\n")
+          yield (b"--xyz\r\n"
+                   b"Content-Type: application/json\r\n\r\n" + json_data + b"\r\n")
+                   
 
   cap.release()
   
