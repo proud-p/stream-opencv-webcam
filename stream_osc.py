@@ -8,9 +8,11 @@ mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
 
 # OSC setup
-osc_ip = "192.168.0.2"   # Replace with receiver's IP
+wsl_ip ="172.30.40.252" # this needs to be WSL ip.
+windows_ip = "127.0.0.1" #this can be local
 osc_port = 5009
-osc_client = udp_client.SimpleUDPClient(osc_ip, osc_port)
+osc_client_wsl = udp_client.SimpleUDPClient(wsl_ip, osc_port)
+osc_client_windows = udp_client.SimpleUDPClient(windows_ip, osc_port)
 
 def generate_frames_local():
     cap = cv2.VideoCapture(0)
@@ -49,17 +51,19 @@ def generate_frames_local():
 
                     # Get landmark 9 (middle finger MCP)
                     lm9 = hand_landmarks.landmark[9]
-                    coords = [round(lm9.x, 2), round(lm9.y, 2), round(lm9.z, 2)]
+                    coords = [round(lm9.x, 1), round(lm9.y, 1), 0.0]
                     hand_detected = True
 
                     if coords != last_coords:
-                        osc_client.send_message("/xyz", coords)
+                        osc_client_wsl.send_message("/xyz", coords)
+                        osc_client_windows.send_message("/xyz", coords)
                         print(f"Sent OSC /xyz: {coords}")
                         last_coords = coords
 
             if not hand_detected and hand_was_present:
                 # Send [0.0, 0.0, 0.0] once when hand disappears
-                osc_client.send_message("/xyz", [0.0, 0.0, 0.0])
+                osc_client_wsl.send_message("/xyz", [0.0, 0.0, 0.0])
+                osc_client_windows.send_message("/xyz", [0.0, 0.0, 0.0])
                 print("Sent OSC /xyz: [0.0, 0.0, 0.0] (hand left)")
                 last_coords = [0.0, 0.0, 0.0]
 
