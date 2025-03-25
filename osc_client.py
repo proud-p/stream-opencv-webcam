@@ -6,7 +6,7 @@ def get_message():
     return "Message from another script!"
 
 ip = "127.0.0.1"    # Localhost
-port = 8001     # Your desired port
+port = 4444     # Your desired port
 osc_client = udp_client.SimpleUDPClient(ip, port)
 
 def trigger_unreal():
