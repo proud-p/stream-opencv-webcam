@@ -11,7 +11,7 @@ osc_client = udp_client.SimpleUDPClient(ip, port)
 
 def trigger_unreal():
     """
-    This function sends an OSC message to Unreal Engine
+    This function sends an OSC message to Unreal Engine - testing
     """
     message_address = "/trigger"
     value = get_message()  # Value to be sent (you can change this as needed 
