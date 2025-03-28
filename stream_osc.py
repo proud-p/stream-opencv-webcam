@@ -13,8 +13,10 @@ mp_hands = mp.solutions.hands
 wsl_ip = "172.30.40.252"  # WSL IP
 windows_ip = "127.0.0.1"  # Localhost for Windows
 osc_port = 5009
+unreal_port = 4444
 osc_client_wsl = udp_client.SimpleUDPClient(wsl_ip, osc_port)
 osc_client_windows = udp_client.SimpleUDPClient(windows_ip, osc_port)
+osc_client_unreal = udp_client.SimpleUDPClient(windows_ip, unreal_port)
 
 # === Smoothing Settings ===
 smooth_buffer = deque(maxlen=5)  # For moving average
@@ -63,7 +65,11 @@ def generate_frames_local():
 
                     # Get landmark 9 (middle finger MCP)
                     lm9 = hand_landmarks.landmark[9]
+                    coords_raw = [lm9.x,  lm9.y, 0.0]
+                    
+                    print(f"sending to unreal {coords_raw}")
                     coords = [round(lm9.x, 2), round(lm9.y, 2), 0.0]
+                    osc_client_unreal.send_message("/xyz", coords)
                     hand_detected = True
                     smooth_buffer.append(coords)
 

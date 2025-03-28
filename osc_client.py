@@ -1,9 +1,11 @@
 
 from pythonosc import udp_client
-from time import sleep
+from time import sleep, time
+import random
+import math
 
 def get_message():
-    return "Message from another script!"
+    return f"Message from another script! Random seed: {random.randint(0,35432)}"
 
 ip = "127.0.0.1"    # Localhost
 port = 4444     # Your desired port
@@ -20,6 +22,22 @@ def trigger_unreal():
     # Send the OSC message
     osc_client.send_message(message_address, value)
     print(f"Sent OSC message to {ip}:{port} with value:{value}")
+    
+    t = time()  # seconds since epoch
+
+    # Frequency of the sine wave (how fast it oscillates)
+    frequency = 0.5  # Hz
+
+    # Amplitude sweep between 0 and 1
+    sweep_value = (math.sin(2 * math.pi * frequency * t) + 1) / 2
+    
+    numbers = [
+        abs(math.cos(t*frequency)),   # FLOATTTTTTT!! OTHERWISE UNREAL WONT READ THEN INDEX WILL BE 1
+        
+         0.0,
+         0.0,]
+    osc_client.send_message("/xyz", numbers)
+    print(f"Sent OSC message to {ip}:{port} with value:{numbers}")
 
 
 while True:
